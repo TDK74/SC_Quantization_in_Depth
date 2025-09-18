@@ -1,0 +1,149 @@
+import torch
+
+from helper import get_q_scale_symmetric, linear_q_with_scale_and_zero_point
+from helper import linear_dequantization
+from helper import plot_quantization_errors, quantization_error
+
+## ------------------------------------------------------##
+def linear_q_symmetric_per_channel(tensor, dim, dtype = torch.int8):
+    return quantized_tensor, scale
+
+## ------------------------------------------------------##
+test_tensor = torch.tensor([[191.6, -13.5, 728.6],
+                            [92.14, 295.5,  -184],
+                            [0,     684.6, 245.5]])
+
+## ------------------------------------------------------##
+dim = 0
+output_dim = test_tensor.shape[dim]
+
+## ------------------------------------------------------##
+output_dim  # print()
+
+## ------------------------------------------------------##
+scale = torch.zeros(output_dim)
+
+## ------------------------------------------------------##
+scale  # print()
+
+## ------------------------------------------------------##
+for index in range(output_dim):
+    sub_tensor = test_tensor.select(dim, index)
+
+    scale[index] = get_q_scale_symmetric(sub_tensor)
+
+## ------------------------------------------------------##
+scale  # print()
+
+## ------------------------------------------------------##
+scale_shape = [1] * test_tensor.dim()
+
+## ------------------------------------------------------##
+scale_shape  # print()
+
+## ------------------------------------------------------##
+scale_shape[dim] = -1
+
+## ------------------------------------------------------##
+scale_shape  # print()
+
+## ------------------------------------------------------##
+scale = scale.view(scale_shape)
+
+## ------------------------------------------------------##
+copy_scale = scale
+
+scale  # print()
+
+## ------------------------------------------------------##
+m = torch.tensor([[1, 2, 3],
+                  [4,5,6],
+                  [7,8,9]])
+
+## ------------------------------------------------------##
+m  # print()
+
+## ------------------------------------------------------##
+s = torch.tensor([1, 5, 10])
+
+## ------------------------------------------------------##
+s  # print()
+
+## ------------------------------------------------------##
+s.shape
+
+## ------------------------------------------------------##
+s.view(1, 3).shape
+
+## ------------------------------------------------------##
+s.view(1, -1).shape
+
+## ------------------------------------------------------##
+s.view(-1, 1).shape
+
+## ------------------------------------------------------##
+scale = torch.tensor([[1], [5], [10]])
+
+## ------------------------------------------------------##
+scale.shape  # print()
+
+## ------------------------------------------------------##
+m / scale
+
+## ------------------------------------------------------##
+scale = copy_scale
+
+scale  # print()
+
+## ------------------------------------------------------##
+scale.shape  # print()
+
+## ------------------------------------------------------##
+quantized_tensor = linear_q_with_scale_and_zero_point(test_tensor, scale = scale,
+                                                      zero_point = 0)
+
+## ------------------------------------------------------##
+quantized_tensor  # print()
+
+## ------------------------------------------------------##
+def linear_q_symmetric_per_channel(r_tensor, dim, dtype = torch.int8):
+    output_dim = r_tensor.shape[dim]
+
+    scale = torch.zeros(output_dim)
+
+    for index in range(output_dim):
+        sub_tensor = r_tensor.select(dim, index)
+        scale[index] = get_q_scale_symmetric(sub_tensor, dtype = dtype)
+
+    scale_shape = [1] * r_tensor.dim()
+    scale_shape[dim] = -1
+    scale = scale.view(scale_shape)
+    quantized_tensor = linear_q_with_scale_and_zero_point(r_tensor, scale = scale,
+                                                          zero_point = 0, dtype = dtype)
+
+    return quantized_tensor, scale
+
+## ------------------------------------------------------##
+test_tensor = torch.tensor([[191.6, -13.5, 728.6],
+                            [92.14, 295.5,  -184],
+                            [0,     684.6, 245.5]])
+
+## ------------------------------------------------------##
+quantized_tensor_0, scale_0 = linear_q_symmetric_per_channel(test_tensor, dim = 0)
+
+quantized_tensor_1, scale_1 = linear_q_symmetric_per_channel(test_tensor, dim = 1)
+
+## ------------------------------------------------------##
+dequantized_tensor_0 = linear_dequantization(quantized_tensor_0, scale_0, 0)
+
+plot_quantization_errors(test_tensor, quantized_tensor_0, dequantized_tensor_0)
+
+## ------------------------------------------------------##
+print(f"""Quantization Error : {quantization_error(test_tensor, dequantized_tensor_0)}""")
+
+## ------------------------------------------------------##
+dequantized_tensor_1 = linear_dequantization(quantized_tensor_1, scale_1, 0)
+
+plot_quantization_errors(test_tensor, quantized_tensor_1, dequantized_tensor_1, n_bits = 8)
+
+print(f"""Quantization Error : {quantization_error(test_tensor, dequantized_tensor_1)}""")
